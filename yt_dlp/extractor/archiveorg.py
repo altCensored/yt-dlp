@@ -1,34 +1,4 @@
-from __future__ import annotations
 
-import json
-import re
-import urllib.parse
-
-from .common import InfoExtractor
-from .youtube import YoutubeBaseInfoExtractor, YoutubeIE
-from ..networking import HEADRequest
-from ..networking.exceptions import HTTPError
-from ..utils import (
-    KNOWN_EXTENSIONS,
-    ExtractorError,
-    bug_reports_message,
-    clean_html,
-    dict_get,
-    extract_attributes,
-    get_element_by_id,
-    int_or_none,
-    join_nonempty,
-    js_to_json,
-    merge_dicts,
-    mimetype2ext,
-    orderedSet,
-    parse_duration,
-    parse_qs,
-    str_or_none,
-    str_to_int,
-    traverse_obj,
-    try_get,
-    unified_strdate,
     unified_timestamp,
     url_or_none,
     urlhandle_detect_ext,
@@ -267,19 +237,8 @@ class ArchiveOrgIE(InfoExtractor):
             'location': m.get('venue'),
             'release_year': int_or_none(m.get('year'))}
 
-        thumbnail_found = False
-        entry = {}
         for f in metadata['files']:
-            if f.get('source') == 'original' and re.match('^((?!thumb).)*\.(jpe?g|webp)$', f['name']):
-                entry['thumbnails'].append({
-                    'id': f['name'],
-                    'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
-                    'width': int_or_none(f.get('width')),
-                    'height': int_or_none(f.get('width')),
-                    'filesize': int_or_none(f.get('size'))
-                })
-                thumbnail_found = True
-            elif f['name'] in entries:
+            if f['name'] in entries:
                 entries[f['name']] = merge_dicts(entries[f['name']], {
                     'id': identifier + '/' + f['name'],
                     'title': f.get('title') or f['name'],
@@ -292,12 +251,20 @@ class ArchiveOrgIE(InfoExtractor):
                     'discnumber': int_or_none(f.get('disc')),
                     'release_year': int_or_none(f.get('year'))})
                 entry = entries[f['name']]
-            elif traverse_obj(f, 'original', expected_type=str) in entries:
-                entry = entries[f['original']]
-            else:
-                continue
+                
+        thumbnail_found = False
+        for f in metadata['files']:
+            if f.get('source') == 'original' and re.match('^((?!thumb).)*\.(jpe?g|webp)$', f['name']):
+                entry['thumbnails'].append({
+                    'id': f['name'],
+                    'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
+                    'width': int_or_none(f.get('width')),
+                    'height': int_or_none(f.get('width')),
+                    'filesize': int_or_none(f.get('size'))
+                })
+                thumbnail_found = True
 
-            if f.get('format') == 'Thumbnail' and not thumbnail_found:
+            elif f.get('format') == 'Thumbnail' and not thumbnail_found:
                 entry['thumbnails'].append({
                     'id': f['name'],
                     'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
