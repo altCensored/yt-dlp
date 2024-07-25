@@ -1,4 +1,34 @@
+from __future__ import annotations
 
+import json
+import re
+import urllib.parse
+
+from .common import InfoExtractor
+from .youtube import YoutubeBaseInfoExtractor, YoutubeIE
+from ..networking import HEADRequest
+from ..networking.exceptions import HTTPError
+from ..utils import (
+    KNOWN_EXTENSIONS,
+    ExtractorError,
+    bug_reports_message,
+    clean_html,
+    dict_get,
+    extract_attributes,
+    get_element_by_id,
+    int_or_none,
+    join_nonempty,
+    js_to_json,
+    merge_dicts,
+    mimetype2ext,
+    orderedSet,
+    parse_duration,
+    parse_qs,
+    str_or_none,
+    str_to_int,
+    traverse_obj,
+    try_get,
+    unified_strdate,
     unified_timestamp,
     url_or_none,
     urlhandle_detect_ext,
@@ -251,7 +281,7 @@ class ArchiveOrgIE(InfoExtractor):
                     'discnumber': int_or_none(f.get('disc')),
                     'release_year': int_or_none(f.get('year'))})
                 entry = entries[f['name']]
-                
+
         thumbnail_found = False
         for f in metadata['files']:
             if f.get('source') == 'original' and re.match('^((?!thumb).)*\.(jpe?g|webp)$', f['name']):
