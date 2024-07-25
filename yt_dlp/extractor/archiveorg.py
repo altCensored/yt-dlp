@@ -267,8 +267,19 @@ class ArchiveOrgIE(InfoExtractor):
             'location': m.get('venue'),
             'release_year': int_or_none(m.get('year'))}
 
+        thumbnail_found = False
+        entry = {}
         for f in metadata['files']:
-            if f['name'] in entries:
+            if f.get('source') == 'original' and re.match('^((?!thumb).)*\.(jpe?g|webp)$', f['name']):
+                entry['thumbnails'].append({
+                    'id': f['name'],
+                    'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
+                    'width': int_or_none(f.get('width')),
+                    'height': int_or_none(f.get('width')),
+                    'filesize': int_or_none(f.get('size'))
+                })
+                thumbnail_found = True
+            elif f['name'] in entries:
                 entries[f['name']] = merge_dicts(entries[f['name']], {
                     'id': identifier + '/' + f['name'],
                     'title': f.get('title') or f['name'],
@@ -286,7 +297,7 @@ class ArchiveOrgIE(InfoExtractor):
             else:
                 continue
 
-            if f.get('format') == 'Thumbnail':
+            if f.get('format') == 'Thumbnail' and not thumbnail_found:
                 entry['thumbnails'].append({
                     'id': f['name'],
                     'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
