@@ -281,12 +281,20 @@ class ArchiveOrgIE(InfoExtractor):
                     'discnumber': int_or_none(f.get('disc')),
                     'release_year': int_or_none(f.get('year'))})
                 entry = entries[f['name']]
-            elif traverse_obj(f, 'original', expected_type=str) in entries:
-                entry = entries[f['original']]
-            else:
-                continue
 
-            if f.get('format') == 'Thumbnail':
+        thumbnail_found = False
+        for f in metadata['files']:
+            if f.get('source') == 'original' and re.match('^((?!thumb).)*\.(jpe?g|webp)$', f['name']):
+                entry['thumbnails'].append({
+                    'id': f['name'],
+                    'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
+                    'width': int_or_none(f.get('width')),
+                    'height': int_or_none(f.get('width')),
+                    'filesize': int_or_none(f.get('size'))
+                })
+                thumbnail_found = True
+
+            elif f.get('format') == 'Thumbnail' and not thumbnail_found:
                 entry['thumbnails'].append({
                     'id': f['name'],
                     'url': 'https://archive.org/download/' + identifier + '/' + f['name'],
